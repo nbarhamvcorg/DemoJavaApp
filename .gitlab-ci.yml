@@ -1,7 +1,6 @@
 stages:
     - Build
     - PipelineSAST-AgentSCA
-    - PolicySAST
 
 Compile Application:
     image: maven:3.6.0-jdk-8
@@ -20,7 +19,7 @@ Compile Application:
 
 Pipeline Scan Staic Analysis:
     image: veracode/pipeline-scan:latest
-    stage: security-scan
+    stage: PipelineSAST-AgentSCA
     except:
       refs:
         - schedules
