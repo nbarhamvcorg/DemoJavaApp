@@ -1,10 +1,6 @@
 stages:
-    - Build
-    - Security_Scan
-    - Scan_Reporting
-    - Housekeeping
-    - Deploy_Run
-    - Dynamic_Analysis
+    - build
+    - security-scan
 
 Compile Application:
     image: maven:3.6.0-jdk-8
@@ -23,10 +19,7 @@ Compile Application:
 
 Policy Scan Static Analysis:
     image: veracode/api-wrapper-java
-    stage: Security_Scan
-    only:
-        - schedules
-        - master
+    stage: security-scan
     script:
         - java -jar /opt/veracode/api-wrapper.jar -vid ${VERACODE_API_ID} -vkey ${VERACODE_API_KEY}
           -action UploadAndScan -appname "verademo-gitlab" -createprofile true -autoscan true
