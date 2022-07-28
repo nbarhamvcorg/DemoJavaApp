@@ -21,13 +21,31 @@ Compile Application:
 Pipeline Scan Staic Analysis:
     image: veracode/pipeline-scan:latest
     stage: PipelineSAST-AgentSCA
-    except:
-      refs:
-        - schedules
-      changes:
-        - pipeline-basline.json
     script:
         - java -jar /opt/veracode/pipeline-scan.jar -vid ${VERACODE_API_ID} -vkey ${VERACODE_API_KEY} -f ./target/verademo.war
+    allow_failure: true
+
+Agent-based SCA:
+    image: maven:3.6.0-jdk-8
+    stage: PipelineSAST-AgentSCA
+    before_script:
+        - curl -sL https://deb.nodesource.com/setup_17.x | bash -
+        - apt-get update && apt-get -y install nodejs
+        - npm install axios
+        - npm install mathjs
+
+    script:
+        - curl -sSL https://download.sourceclear.com/ci.sh | bash -s scan . --update-advisor --json scaResults.json --allow-dirty --scan-collectors maven 2>&1 | tee sca_output.txt
+    after_script:
+        - nodejs ./dependencies.js ${PRIVATE_TOKEN} true 17140954
+    artifacts:
+        reports:
+            dependency_scanning: output-sca-vulnerabilites.json
+        paths:
+            - sca_output.txt
+            - output-sca-vulnerabilites.json
+        when: always
+        name: "veracode-SCA-$CI_COMMIT_REF_NAME-$CI_COMMIT_SHORT_SHA"
     allow_failure: true
 
 Policy Scan Static Analysis:
