@@ -1,18 +1,22 @@
 stages:
-  - build
-  - security-scan
+    - Build
+    - Security_Scan
+    - Scan_Reporting
+    - Housekeeping
+    - Deploy_Run
+    - Dynamic_Analysis
 
 Compile Application:
     image: maven:3.6.0-jdk-8
-    stage: build
+    stage: Build
     script:
-    - mvn clean package
+      - mvn clean package
     artifacts:
-      name: verademo_build
+      name: verademo-gitlab
       paths:
         - target/
-        expire_in: 5 week
-      cache:
-        paths:
-          - target/
-          - .m2/repository
+      expire_in: 5 week
+    cache:
+      paths:
+        - target/
+        - .m2/repository
