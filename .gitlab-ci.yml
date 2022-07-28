@@ -2,6 +2,7 @@ stages:
     - Build
     - PipelineSAST-AgentSCA
     - PolicySAST
+    - Scan_Reporting
 
 Compile Application:
     image: maven:3.6.0-jdk-8
@@ -62,3 +63,18 @@ Policy Scan Static Analysis:
         when: always
         name: "veracode-POLICY-SCAN-$CI_COMMIT_REF_NAME-$CI_COMMIT_SHORT_SHA"
     allow_failure: true
+
+Generate static analysis report and issues - Policy Scan:
+    image: node:latest
+    stage: Scan_Reporting
+    before_script:
+        - npm ci
+    script:
+        - npm run results-import scan_type=policy profile_name=Verademo gitlab_token=${PRIVATE_TOKEN} gitlab_project=38168450 create_issue=true  
+    artifacts:
+        reports:
+            sast: output-sast-vulnerabilites.json
+        paths: 
+            - output-sast-vulnerabilites.json
+        when: always
+        name: "veracode-POLICY-SCAN-RESULTS-$CI_COMMIT_REF_NAME-$CI_COMMIT_SHORT_SHA"
