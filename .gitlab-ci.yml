@@ -1,10 +1,10 @@
 stages:
-    - build
-    - security-scan
+    - Build
+    - securityscan
 
 Compile Application:
     image: maven:3.6.0-jdk-8
-    stage: build
+    stage: Build
     script:
       - mvn clean package
     artifacts:
@@ -19,7 +19,7 @@ Compile Application:
 
 Security scans:
     image: veracode/api-wrapper-java
-    stage: security-scan
+    stage: Securityscan
     script:
         - java -jar /opt/veracode/api-wrapper.jar -vid ${VERACODE_API_ID} -vkey ${VERACODE_API_KEY}
           -action UploadAndScan -appname "verademo-gitlab" -createprofile true -autoscan true
@@ -34,7 +34,7 @@ Security scans:
 
 
     image: veracode/pipeline-scan:latest
-    stage: security-scan
+    stage: Securityscan
     only:
         - development
     script:
