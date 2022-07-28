@@ -1,12 +1,12 @@
 stages:
-    - Build
-    - PipelineSAST-AgentSCA
-    - PolicySAST
+    - App-build
+    - Frequent-security-scans
+    - Policy-scan
     - Scan_Reporting
 
 Compile Application:
     image: maven:3.6.0-jdk-8
-    stage: Build
+    stage: App-build
     script:
       - mvn clean package
     artifacts:
@@ -21,7 +21,7 @@ Compile Application:
 
 Pipeline Scan Staic Analysis:
     image: veracode/pipeline-scan:latest
-    stage: Security_Scan
+    stage: Frequent-security-scans
     only:
         - development
     script:
@@ -42,7 +42,7 @@ Pipeline Scan Staic Analysis:
 
 Agent-based SCA:
     image: maven:3.6.0-jdk-8
-    stage: PipelineSAST-AgentSCA
+    stage: Frequent-security-scans
     before_script:
         - curl -sL https://deb.nodesource.com/setup_17.x | bash -
         - apt-get update && apt-get -y install nodejs
@@ -65,7 +65,7 @@ Agent-based SCA:
 
 Policy Scan Static Analysis:
     image: veracode/api-wrapper-java
-    stage: PolicySAST
+    stage: Policy-scan
     script:
         - java -jar /opt/veracode/api-wrapper.jar -vid ${VERACODE_API_ID} -vkey ${VERACODE_API_KEY}
           -action UploadAndScan -appname "verademo-gitlab" -createprofile false -autoscan true
