@@ -1,0 +1,18 @@
+stages:
+  - build
+  - security-scan
+
+Compile Application:
+    image: maven:3.6.0-jdk-8
+    stage: build
+    script:
+      - mvn clean package
+    artifacts:
+      name: verademo_build
+      paths:
+        - target/
+        expire_in: 5 week
+      cache:
+        paths:
+          - target/
+          - .m2/repository
