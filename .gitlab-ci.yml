@@ -19,54 +19,14 @@ Compile Application:
         - target/
         - .m2/repository
 
-Pipeline Scan Staic Analysis:
-    image: veracode/pipeline-scan:latest
-    stage: Frequent-security-scans
-    script:
-        - java -jar /opt/veracode/pipeline-scan.jar -vid ${VERACODE_API_ID} -vkey ${VERACODE_API_KEY} --request_policy "Nickpolicy" 2>&1 | tee pipeline_scan_policy_output.txt
-        - java -jar /opt/veracode/pipeline-scan.jar -vid ${VERACODE_API_ID} -vkey ${VERACODE_API_KEY} --file target/verademo.war --issue_details true --gl_issue_generation true --gl_vulnerability_generation true --policy_file Nickpolicy.json -bf pipeline-basline.json -fjf filtered_results.json 2>&1 | tee pipeline_scan_text_output.txt
-    artifacts:
-        reports: 
-            sast: veracode_gitlab_vulnerabilities.json
-        paths:
-            - results.json
-            - filtered_results.json
-            - pipeline_scan_text_output.txt
-            - pipeline_scan_policy_output.pipeline_scan_text_output
-            - veracode_gitlab_vulnerabilities.json
-        when: always
-        name: "veracode-pipeline-$CI_COMMIT_REF_NAME-$CI_COMMIT_SHORT_SHA"
-    allow_failure: true
-
-Agent-based SCA:
-    image: maven:3.6.0-jdk-8
-    stage: Frequent-security-scans
-    before_script:
-        - curl -sL https://deb.nodesource.com/setup_17.x | bash -
-        - apt-get update && apt-get -y install nodejs
-        - npm install axios
-        - npm install mathjs
-
-    script:
-        - curl -sSL https://download.sourceclear.com/ci.sh | bash -s scan . --update-advisor --json scaResults.json --allow-dirty --scan-collectors maven 2>&1 | tee sca_output.txt
-    after_script:
-        - nodejs ./dependencies.js ${PRIVATE_TOKEN} true 38168450
-    artifacts:
-        reports:
-            dependency_scanning: output-sca-vulnerabilites.json
-        paths:
-            - sca_output.txt
-            - output-sca-vulnerabilites.json
-        when: always
-        name: "veracode-SCA-$CI_COMMIT_REF_NAME-$CI_COMMIT_SHORT_SHA"
-    allow_failure: true
-
 Policy Scan Static Analysis:
     image: veracode/api-wrapper-java
-    stage: Policy-scan
+    stage: security-scan
+    only:
+        - merge_request
     script:
         - java -jar /opt/veracode/api-wrapper.jar -vid ${VERACODE_API_ID} -vkey ${VERACODE_API_KEY}
-          -action UploadAndScan -appname "verademo-gitlab" -createprofile false -autoscan true
+          -action UploadAndScan -appname "verademo-gitlab" -createprofile true -autoscan true
           -filepath ./target/verademo.war -version "Job ${CI_JOB_ID} in pipeline ${CI_PIPELINE_ID}" 
           -scantimeout 15 2>&1 | tee policy_scan_output.txt
     artifacts:
@@ -75,18 +35,3 @@ Policy Scan Static Analysis:
         when: always
         name: "veracode-POLICY-SCAN-$CI_COMMIT_REF_NAME-$CI_COMMIT_SHORT_SHA"
     allow_failure: true
-
-Generate static analysis report and issues - Policy Scan:
-    image: node:latest
-    stage: Scan_Reporting
-    before_script:
-        - npm ci
-    script:
-        - npm run results-import scan_type=policy profile_name=Verademo gitlab_token=${PRIVATE_TOKEN} gitlab_project=38168450 create_issue=true  
-    artifacts:
-        reports:
-            sast: output-sast-vulnerabilites.json
-        paths: 
-            - output-sast-vulnerabilites.json
-        when: always
-        name: "veracode-POLICY-SCAN-RESULTS-$CI_COMMIT_REF_NAME-$CI_COMMIT_SHORT_SHA"
