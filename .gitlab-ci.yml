@@ -22,8 +22,6 @@ Compile Application:
 Pipeline Scan Staic Analysis:
     image: veracode/pipeline-scan:latest
     stage: Frequent-security-scans
-    only:
-        - development
     script:
         - java -jar /opt/veracode/pipeline-scan.jar -vid ${VERACODE_API_ID} -vkey ${VERACODE_API_KEY} --request_policy "Nickpolicy" 2>&1 | tee pipeline_scan_policy_output.txt
         - java -jar /opt/veracode/pipeline-scan.jar -vid ${VERACODE_API_ID} -vkey ${VERACODE_API_KEY} --file target/verademo.war --issue_details true --gl_issue_generation true --gl_vulnerability_generation true --policy_file Nickpolicy.json -bf pipeline-basline.json -fjf filtered_results.json 2>&1 | tee pipeline_scan_text_output.txt
