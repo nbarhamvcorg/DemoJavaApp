@@ -1,6 +1,7 @@
 stages:
     - Build
     - PipelineSAST-AgentSCA
+    - PolicySAST
 
 Compile Application:
     image: maven:3.6.0-jdk-8
@@ -26,17 +27,20 @@ Pipeline Scan Staic Analysis:
       changes:
         - pipeline-basline.json
     script:
-        - java -jar /opt/veracode/pipeline-scan.jar -vid ${VERACODE_API_ID} -vkey ${VERACODE_API_KEY} --request_policy "VeraDemo Policy" 2>&1 | tee pipeline_scan_policy_output.txt
-        - java -jar /opt/veracode/pipeline-scan.jar -vid ${VERACODE_API_ID} -vkey ${VERACODE_API_KEY} --file target/verademo.war --issue_details true --gl_issue_generation true --gl_vulnerability_generation true --policy_file VeraDemo_Policy.json -bf pipeline-basline.json -fjf filtered_results.json 2>&1 | tee pipeline_scan_text_output.txt
+        - java -jar /opt/veracode/pipeline-scan.jar -vid ${VERACODE_API_ID} -vkey ${VERACODE_API_KEY} -f /target/verademo.war
+    allow_failure: true
+
+    Policy Scan Static Analysis:
+    image: veracode/api-wrapper-java
+    stage: PolicySAST
+    script:
+        - java -jar /opt/veracode/api-wrapper.jar -vid ${VERACODE_API_ID} -vkey ${VERACODE_API_KEY}
+          -action UploadAndScan -appname "verademo-gitlab" -createprofile false -autoscan true
+          -filepath ./target/verademo.war -version "Job ${CI_JOB_ID} in pipeline ${CI_PIPELINE_ID}" 
+          -scantimeout 15 2>&1 | tee policy_scan_output.txt
     artifacts:
-        reports: 
-            sast: veracode_gitlab_vulnerabilities.json
         paths:
-            - results.json
-            - filtered_results.json
-            - pipeline_scan_text_output.txt
-            - pipeline_scan_policy_output.pipeline_scan_text_output
-            - veracode_gitlab_vulnerabilities.json
+            - policy_scan_output.txt
         when: always
-        name: "veracode-pipeline-$CI_COMMIT_REF_NAME-$CI_COMMIT_SHORT_SHA"
+        name: "veracode-POLICY-SCAN-$CI_COMMIT_REF_NAME-$CI_COMMIT_SHORT_SHA"
     allow_failure: true
