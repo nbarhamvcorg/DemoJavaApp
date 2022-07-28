@@ -27,5 +27,20 @@ Pipeline Scan Staic Analysis:
       changes:
         - pipeline-basline.json
     script:
-        - java -jar /opt/veracode/pipeline-scan.jar -vid ${VERACODE_API_ID} -vkey ${VERACODE_API_KEY} -f /target/verademo.war
+        - java -jar /opt/veracode/pipeline-scan.jar -vid ${VERACODE_API_ID} -vkey ${VERACODE_API_KEY} -f ./target/verademo.war
+    allow_failure: true
+
+Policy Scan Static Analysis:
+    image: veracode/api-wrapper-java
+    stage: PolicySAST
+    script:
+        - java -jar /opt/veracode/api-wrapper.jar -vid ${VERACODE_API_ID} -vkey ${VERACODE_API_KEY}
+          -action UploadAndScan -appname "verademo-gitlab" -createprofile false -autoscan true
+          -filepath ./target/verademo.war -version "Job ${CI_JOB_ID} in pipeline ${CI_PIPELINE_ID}" 
+          -scantimeout 15 2>&1 | tee policy_scan_output.txt
+    artifacts:
+        paths:
+            - policy_scan_output.txt
+        when: always
+        name: "veracode-POLICY-SCAN-$CI_COMMIT_REF_NAME-$CI_COMMIT_SHORT_SHA"
     allow_failure: true
