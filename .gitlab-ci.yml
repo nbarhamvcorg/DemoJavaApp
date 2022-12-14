@@ -21,9 +21,15 @@ Policy Scan Static Analysis:
     image: veracode/api-wrapper-java
     stage: Policy-scan
     script:
-        - java -jar /opt/veracode/api-wrapper.jar -vid ${VERACODE_API_ID} -vkey ${VERACODE_API_KEY}
-          -action UploadAndScan -appname "verademo-gitlab" -createprofile true -autoscan true
-          -filepath ./target/verademo.war -version "Job ${CI_JOB_ID} in pipeline ${CI_PIPELINE_ID}" 
+        - java -jar /opt/veracode/api-wrapper.jar 
+            -vid ${VERACODE_API_ID} 
+            -vkey ${VERACODE_API_KEY}
+            -action UploadAndScan 
+            -appname "verademo-gitlab" 
+            -createprofile true 
+            -autoscan true
+          -filepath ./target/verademo.war 
+          -version "Job ${CI_JOB_ID} in pipeline ${CI_PIPELINE_ID}" 
           -scantimeout 15 2>&1 | tee policy_scan_output.txt
     artifacts:
         paths:
