@@ -1,6 +1,7 @@
 stages:
     - App-build
     - Policy-scan
+    - Crashtest-scan
 
 Compile Application:
     image: maven:3.6.0-jdk-8
@@ -40,6 +41,7 @@ Policy Scan Static Analysis:
 
 Crashtest Security Scan:
   image: alpine:latest
+  stage: Crashtest-scan
   script: "sh start_crashtest.sh $CRASHTEST_WEBHOOK"
   artifacts:
    when: always
