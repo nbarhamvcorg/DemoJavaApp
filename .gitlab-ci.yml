@@ -1,74 +1,73 @@
 stages:
-    # - Build-App
-    # - Pipeline-Scan-SAST
-    - Agent-based-SCA
-    # - Upload-&-Scan-SAST,SCA(Policy)
-    # - Crashtest DAST Scan
+     - Build-App
+     - Pipeline-Scan-SAST
+     - Agent-based-SCA
+     - Upload-&-Scan-SAST,SCA(Policy)
 
-# Compile Application:
-#     image: maven:3.6.0-jdk-8
-#     stage: Build-App
-#     script:
-#       - mvn clean package
-#     artifacts:
-#       name: verademo-gitlab
-#       paths:
-#         - target/
-#       expire_in: 5 week
-#     cache:
-#       paths:
-#         - target/
-#         - .m2/repository
+ Compile Application:
+     image: maven:3.6.0-jdk-8
+     stage: Build-App
+     script:
+       - mvn clean package
+     artifacts:
+       name: verademo-gitlab
+       paths:
+         - target/
+       expire_in: 5 week
+     cache:
+       paths:
+         - target/
+         - .m2/repository
 
-# Pipeline Scan SAST:
-#     image: veracode/pipeline-scan:latest
-#     stage: Pipeline-Scan-SAST
-#     except:
-#       changes:
-#         - pipeline-basline.json
-#     script:
-#         - java -jar /opt/veracode/pipeline-scan.jar -vid ${VERACODE_API_ID} -vkey ${VERACODE_API_KEY} --request_policy "Nickpolicy" 2>&1 | tee pipeline_scan_policy_output.txt
-#         - java -jar /opt/veracode/pipeline-scan.jar -vid ${VERACODE_API_ID} -vkey ${VERACODE_API_KEY} --file target/verademo.war 
+ Pipeline Scan SAST:
+     image: veracode/pipeline-scan:latest
+     stage: Pipeline-Scan-SAST
+     except:
+       changes:
+         - pipeline-basline.json
+     script:
+         - java -jar /opt/veracode/pipeline-scan.jar -vid ${VERACODE_API_ID} -vkey ${VERACODE_API_KEY} --request_policy "Nickpolicy" 2>&1 | tee pipeline_scan_policy_output.txt
+         - java -jar /opt/veracode/pipeline-scan.jar -vid ${VERACODE_API_ID} -vkey ${VERACODE_API_KEY} --file target/verademo.war 
 #             --issue_details true 
-#             --policy_file Nickpolicy.json 
-#             --gl_issue_generation true
-#             -fjf filtered_results.json 2>&1 | tee pipeline_scan_text_output.txt
-#     artifacts:
-#         paths:
-#             - results.json
-#             - filtered_results.json
-#             - pipeline_scan_text_output.txt
-#         when: always
-#         name: "veracode-pipeline-$CI_COMMIT_REF_NAME-$CI_COMMIT_SHORT_SHA"
-#     allow_failure: true
+             --policy_file Nickpolicy.json 
+             --gl_issue_generation true
+             -fjf filtered_results.json 2>&1 | tee pipeline_scan_text_output.txt
+     artifacts:
+         paths:
+             - results.json
+             - filtered_results.json
+             - pipeline_scan_text_output.txt
+         when: always
+         name: "veracode-pipeline-$CI_COMMIT_REF_NAME-$CI_COMMIT_SHORT_SHA"
+     allow_failure: true
 
 Agent-based SCA:
     image: maven:3.6.0-jdk-8
     stage: Agent-based-SCA
     script:
-        - curl -sSL https://download.sourceclear.com/ci.sh | bash -s scan . --update-advisor --json scaResults.json --allow-dirty --scan-collectors maven 2>&1 | tee sca_output.txt
+        - curl -sSL https://download.sourceclear.com/ci.sh | bash -s scan . --json scaResults.json --allow-dirty --scan-collectors maven 2>&1 | tee sca_output.txt
     allow_failure: true
 
-# Policy Scan SAST, SCA:
-#     image: veracode/api-wrapper-java
-#     stage: Upload-&-Scan-SAST,SCA(Policy)
-#     script:
-#         - java -jar /opt/veracode/api-wrapper.jar 
-#             -vid ${VERACODE_API_ID} 
-#             -vkey ${VERACODE_API_KEY}
-#             -action UploadAndScan 
-#             -appname "verademo-gitlab" 
-#             -createprofile true 
-#             -autoscan true
-#           -filepath ./target/verademo.war 
-#           -version "Job ${CI_JOB_ID} in pipeline ${CI_PIPELINE_ID}" 
-#           -scantimeout 15 2>&1 | tee policy_scan_output.txt
-#     artifacts:
-#         paths:
-#             - policy_scan_output.txt
-#         when: always
-#         name: "veracode-POLICY-SCAN-$CI_COMMIT_REF_NAME-$CI_COMMIT_SHORT_SHA"
-#     allow_failure: true
+ Policy Scan SAST, SCA:
+     image: veracode/api-wrapper-java
+     stage: Upload-&-Scan-SAST,SCA(Policy)
+     script:
+         - java -jar /opt/veracode/api-wrapper.jar 
+             -vid ${VERACODE_API_ID} 
+             -vkey ${VERACODE_API_KEY}
+             -action UploadAndScan 
+             -appname "verademo-gitlab" 
+             -createprofile true 
+             -autoscan true
+           -filepath ./target/verademo.war 
+           -version "Job ${CI_JOB_ID} in pipeline ${CI_PIPELINE_ID}" 
+           -scantimeout 15 2>&1 | tee policy_scan_output.txt
+     artifacts:
+         paths:
+             - policy_scan_output.txt
+         when: always
+         name: "veracode-POLICY-SCAN-$CI_COMMIT_REF_NAME-$CI_COMMIT_SHORT_SHA"
+     allow_failure: true
 
 # Sandbox Scan SAST, SCA:
 #     image: veracode/api-wrapper-java
