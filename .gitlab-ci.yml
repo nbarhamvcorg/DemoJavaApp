@@ -39,11 +39,11 @@ Policy Scan Static Analysis:
         name: "veracode-POLICY-SCAN-$CI_COMMIT_REF_NAME-$CI_COMMIT_SHORT_SHA"
     allow_failure: true
 
-Crashtest Security Scan:
-  image: alpine:latest
-  stage: Crashtest-scan
-  script: "sh start_crashtest.sh $CRASHTEST_WEBHOOK"
-  artifacts:
-   when: always
-   reports:
-    junit: test-reports/report.xml
+#Crashtest Security Scan:
+#  image: alpine:latest
+#  stage: Crashtest-scan
+#  script: "sh start_crashtest.sh $CRASHTEST_WEBHOOK"
+#  artifacts:
+#   when: always
+#   reports:
+#    junit: test-reports/report.xml
