@@ -68,28 +68,28 @@ Policy Scan SAST, SCA:
         name: "veracode-POLICY-SCAN-$CI_COMMIT_REF_NAME-$CI_COMMIT_SHORT_SHA"
     allow_failure: true
 
-Sandbox Scan SAST, SCA:
-    image: veracode/api-wrapper-java
-    stage: Upload & Scan SAST-SCA (Sandbox)
-    only:
-        - schedules
-    script:
-        - java -jar /opt/veracode/api-wrapper.jar -vid ${VERACODE_API_ID} -vkey ${VERACODE_API_KEY}
-          -action UploadAndScan 
-          -appname "verademo-gitlab"
-          -createprofile true
-          -autoscan true
-          -sandboxname "gitlab-feature-branch" 
-          -createsandbox true
-          -filepath ./target/verademo.war 
-          -version "Job ${CI_JOB_ID} in pipeline ${CI_PIPELINE_ID}" 
-          -scantimeout 15 2>&1 | tee policy_scan_output.txt
-    artifacts:
-        paths:
-            - policy_scan_output.txt
-        when: always
-        name: "veracode-POLICY-SCAN-$CI_COMMIT_REF_NAME-$CI_COMMIT_SHORT_SHA"
-    allow_failure: true
+# Sandbox Scan SAST, SCA:
+#     image: veracode/api-wrapper-java
+#     stage: Upload & Scan SAST-SCA (Sandbox)
+#     only:
+#         - schedules
+#     script:
+#         - java -jar /opt/veracode/api-wrapper.jar -vid ${VERACODE_API_ID} -vkey ${VERACODE_API_KEY}
+#           -action UploadAndScan 
+#           -appname "verademo-gitlab"
+#           -createprofile true
+#           -autoscan true
+#           -sandboxname "gitlab-feature-branch" 
+#           -createsandbox true
+#           -filepath ./target/verademo.war 
+#           -version "Job ${CI_JOB_ID} in pipeline ${CI_PIPELINE_ID}" 
+#           -scantimeout 15 2>&1 | tee policy_scan_output.txt
+#     artifacts:
+#         paths:
+#             - policy_scan_output.txt
+#         when: always
+#         name: "veracode-POLICY-SCAN-$CI_COMMIT_REF_NAME-$CI_COMMIT_SHORT_SHA"
+#     allow_failure: true
 
 # Crashtest Security Scan:
 #  image: alpine:latest
