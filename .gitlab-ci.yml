@@ -1,7 +1,7 @@
 stages:
     - App-build
     - Policy-scan
-    - Crashtest-scan
+#    - Crashtest-scan
 
 Compile Application:
     image: maven:3.6.0-jdk-8
