@@ -1,8 +1,9 @@
 stages:
     - Build-App
     - Pipeline-Scan-SAST
-    - Upload-&-Scan-SAST,SCA(Policy)
-#    - Crashtest DAST Scan
+    - Agent-based-SCA
+    # - Upload-&-Scan-SAST,SCA(Policy)
+    # - Crashtest DAST Scan
 
 Compile Application:
     image: maven:3.6.0-jdk-8
@@ -41,26 +42,42 @@ Pipeline Scan SAST:
         name: "veracode-pipeline-$CI_COMMIT_REF_NAME-$CI_COMMIT_SHORT_SHA"
     allow_failure: true
 
-Policy Scan SAST, SCA:
-    image: veracode/api-wrapper-java
-    stage: Upload-&-Scan-SAST,SCA(Policy)
+Agent-based SCA:
+    image: ubuntu:latest
+    stage: Agent-based-SCA
     script:
-        - java -jar /opt/veracode/api-wrapper.jar 
-            -vid ${VERACODE_API_ID} 
-            -vkey ${VERACODE_API_KEY}
-            -action UploadAndScan 
-            -appname "verademo-gitlab" 
-            -createprofile true 
-            -autoscan true
-          -filepath ./target/verademo.war 
-          -version "Job ${CI_JOB_ID} in pipeline ${CI_PIPELINE_ID}" 
-          -scantimeout 15 2>&1 | tee policy_scan_output.txt
+        - curl -sSL https://download.sourceclear.com/ci.sh | bash -s scan . --update-advisor --json scaResults.json --allow-dirty --scan-collectors maven 2>&1 | tee sca_output.txt
     artifacts:
+        reports:
+            dependency_scanning: output-sca-vulnerabilites.json
         paths:
-            - policy_scan_output.txt
+            - sca_output.txt
+            - output-sca-vulnerabilites.json
         when: always
-        name: "veracode-POLICY-SCAN-$CI_COMMIT_REF_NAME-$CI_COMMIT_SHORT_SHA"
+        name: "veracode-SCA-$CI_COMMIT_REF_NAME-$CI_COMMIT_SHORT_SHA"
     allow_failure: true
+
+
+# Policy Scan SAST, SCA:
+#     image: veracode/api-wrapper-java
+#     stage: Upload-&-Scan-SAST,SCA(Policy)
+#     script:
+#         - java -jar /opt/veracode/api-wrapper.jar 
+#             -vid ${VERACODE_API_ID} 
+#             -vkey ${VERACODE_API_KEY}
+#             -action UploadAndScan 
+#             -appname "verademo-gitlab" 
+#             -createprofile true 
+#             -autoscan true
+#           -filepath ./target/verademo.war 
+#           -version "Job ${CI_JOB_ID} in pipeline ${CI_PIPELINE_ID}" 
+#           -scantimeout 15 2>&1 | tee policy_scan_output.txt
+#     artifacts:
+#         paths:
+#             - policy_scan_output.txt
+#         when: always
+#         name: "veracode-POLICY-SCAN-$CI_COMMIT_REF_NAME-$CI_COMMIT_SHORT_SHA"
+#     allow_failure: true
 
 # Sandbox Scan SAST, SCA:
 #     image: veracode/api-wrapper-java
