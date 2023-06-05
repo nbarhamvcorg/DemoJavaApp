@@ -20,7 +20,7 @@ Compile Application:
         - target/
         - .m2/repository
 
-Pipeline Scan SAST:
+Pipeline Scan SAST Detailed:
     image: veracode/pipeline-scan:latest
     stage: Pipeline-Scan-SAST-Detail
     needs:
@@ -30,7 +30,7 @@ Pipeline Scan SAST:
         - pipeline-basline.json
     script:
         - java -jar /opt/veracode/pipeline-scan.jar -vid ${VERACODE_API_ID} -vkey ${VERACODE_API_KEY} --request_policy "Nickpolicy" 2>&1 | tee pipeline_scan_policy_output.txt
-        - java -jar /opt/veracode/pipeline-scan.jar -vid ${VERACODE_API_ID} -vkey ${VERACODE_API_KEY} --file target/verademo.war 
+        - java -jar /opt/veracode/pipeline-scan.jar -vid ${VERACODE_API_ID} -vkey ${VERACODE_API_KEY} --file target/verademo.war --issue_details true
             --policy_file Nickpolicy.json 
             --gl_issue_generation true
             -fjf filtered_results.json 2>&1 | tee pipeline_scan_text_output.txt
