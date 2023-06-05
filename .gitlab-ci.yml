@@ -1,13 +1,12 @@
 stages:
-    - Build-App
-    - Pipeline-Scan-SAST-Detail
-    - Pipeline-Scan-SAST-Summary
-    - Agent-based-SCA
-    - Upload-&-Scan-SAST,SCA(Policy)
+    - Build app
+    - Pipeline Scan
+    - Agent-based SCA
+    - Upload and Scan SAST, SCA (Policy or Sandbox)
 
 Compile Application:
     image: maven:3.6.0-jdk-8
-    stage: Build-App
+    stage: Build app
     script:
       - mvn clean package
     artifacts:
@@ -20,9 +19,26 @@ Compile Application:
         - target/
         - .m2/repository
 
+Pipeline Scan SAST Summary:
+    image: veracode/pipeline-scan:latest
+    stage: Pipeline Scan
+    needs:
+        - Compile Application
+    except:
+      changes:
+        - pipeline-basline.json
+    script:
+        - java -jar /opt/veracode/pipeline-scan.jar -vid ${VERACODE_API_ID} -vkey ${VERACODE_API_KEY} --file target/verademo.war 
+    artifacts:
+        paths:
+            - results.json
+        when: always
+        name: "veracode-pipeline-$CI_COMMIT_REF_NAME-$CI_COMMIT_SHORT_SHA"
+    allow_failure: true
+
 Pipeline Scan SAST Detailed:
     image: veracode/pipeline-scan:latest
-    stage: Pipeline-Scan-SAST-Detail
+    stage: Pipeline Scan
     needs:
         - Compile Application
     except:
@@ -43,33 +59,25 @@ Pipeline Scan SAST Detailed:
         name: "veracode-pipeline-$CI_COMMIT_REF_NAME-$CI_COMMIT_SHORT_SHA"
     allow_failure: true
 
-Pipeline Scan SAST Summary:
-    image: veracode/pipeline-scan:latest
-    stage: Pipeline-Scan-SAST-Summary
-    needs:
-        - Compile Application
-    except:
-      changes:
-        - pipeline-basline.json
+Agent-based SCA Summary:
+    image: maven:3.6.0-jdk-8
+    stage: Agent-based SCA
     script:
-        - java -jar /opt/veracode/pipeline-scan.jar -vid ${VERACODE_API_ID} -vkey ${VERACODE_API_KEY} --file target/verademo.war 
-    artifacts:
-        paths:
-            - results.json
-        when: always
-        name: "veracode-pipeline-$CI_COMMIT_REF_NAME-$CI_COMMIT_SHORT_SHA"
+        - curl -sSL https://download.sourceclear.com/ci.sh | bash -s scan .
     allow_failure: true
 
-Agent-based SCA:
+Agent-based SCA Detailed:
     image: maven:3.6.0-jdk-8
-    stage: Agent-based-SCA
+    stage: Agent-based SCA
     script:
         - curl -sSL https://download.sourceclear.com/ci.sh | bash -s scan . --json scaResults.json --allow-dirty --scan-collectors maven 2>&1 | tee sca_output.txt
     allow_failure: true
 
-Policy Scan SAST, SCA:
+Upload and Scan SAST, SCA (Policy or Sandbox):
     image: veracode/api-wrapper-java
-    stage: Upload-&-Scan-SAST,SCA(Policy)
+    stage: Upload and Scan SAST, SCA (Policy or Sandbox)
+    needs:
+        - Compile Application
     script:
         - java -jar /opt/veracode/api-wrapper.jar 
             -vid ${VERACODE_API_ID} 
