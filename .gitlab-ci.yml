@@ -1,6 +1,12 @@
+workflow:
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "push"'
+      when: never  # Prevent pipeline run for push event
+
 stages:
     - Build-App
-    - Pipeline-Scan-SAST
+    - Pipeline-Scan-SAST-Detail
+    - Pipeline-Scan-SAST-Summary
     - Agent-based-SCA
     - Upload-&-Scan-SAST,SCA(Policy)
 
@@ -21,7 +27,9 @@ Compile Application:
 
 Pipeline Scan SAST:
     image: veracode/pipeline-scan:latest
-    stage: Pipeline-Scan-SAST
+    stage: Pipeline-Scan-SAST-Detail
+    needs:
+        - Compile Application
     except:
       changes:
         - pipeline-basline.json
@@ -36,6 +44,23 @@ Pipeline Scan SAST:
             - results.json
             - filtered_results.json
             - pipeline_scan_text_output.txt
+        when: always
+        name: "veracode-pipeline-$CI_COMMIT_REF_NAME-$CI_COMMIT_SHORT_SHA"
+    allow_failure: true
+
+Pipeline Scan SAST Summary:
+    image: veracode/pipeline-scan:latest
+    stage: Pipeline-Scan-SAST-Summary
+    needs:
+        - Compile Application
+    except:
+      changes:
+        - pipeline-basline.json
+    script:
+        - java -jar /opt/veracode/pipeline-scan.jar -vid ${VERACODE_API_ID} -vkey ${VERACODE_API_KEY} --file target/verademo.war 
+    artifacts:
+        paths:
+            - results.json
         when: always
         name: "veracode-pipeline-$CI_COMMIT_REF_NAME-$CI_COMMIT_SHORT_SHA"
     allow_failure: true
