@@ -25,9 +25,6 @@ Pipeline Scan SAST (Summary info):
     stage: Pipeline Scan
     needs:
         - Compile Application
-    except:
-      changes:
-        - pipeline-basline.json
     script:
         - java -jar /opt/veracode/pipeline-scan.jar -vid ${VERACODE_API_ID} -vkey ${VERACODE_API_KEY} --file target/verademo.war 
     artifacts:
@@ -42,9 +39,6 @@ Pipeline Scan SAST (Detailed info):
     stage: Pipeline Scan
     needs:
         - Compile Application
-    except:
-      changes:
-        - pipeline-basline.json
     script:
         - java -jar /opt/veracode/pipeline-scan.jar -vid ${VERACODE_API_ID} -vkey ${VERACODE_API_KEY} --request_policy "Nickpolicy" 2>&1 | tee pipeline_scan_policy_output.txt
         - java -jar /opt/veracode/pipeline-scan.jar -vid ${VERACODE_API_ID} -vkey ${VERACODE_API_KEY} --file target/verademo.war --issue_details true
