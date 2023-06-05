@@ -19,7 +19,7 @@ Compile Application:
         - target/
         - .m2/repository
 
-Pipeline Scan SAST Summary:
+Pipeline Scan SAST (Summary info):
     image: veracode/pipeline-scan:latest
     stage: Pipeline Scan
     needs:
@@ -36,7 +36,7 @@ Pipeline Scan SAST Summary:
         name: "veracode-pipeline-$CI_COMMIT_REF_NAME-$CI_COMMIT_SHORT_SHA"
     allow_failure: true
 
-Pipeline Scan SAST Detailed:
+Pipeline Scan SAST (Detailed info):
     image: veracode/pipeline-scan:latest
     stage: Pipeline Scan
     needs:
@@ -63,7 +63,7 @@ Agent-based SCA Summary:
     image: maven:3.6.0-jdk-8
     stage: Agent-based SCA
     script:
-        - curl -sSL https://download.sourceclear.com/ci.sh | bash -s scan .
+        - curl -sSL https://download.sourceclear.com/ci.sh | bash -s scan . --allow-dirty
     allow_failure: true
 
 Agent-based SCA Detailed:
