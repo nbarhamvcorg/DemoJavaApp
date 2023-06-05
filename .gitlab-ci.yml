@@ -3,6 +3,7 @@ stages:
     - Pipeline Scan
     - Agent-based SCA
     - Upload and Scan SAST, SCA (Policy or Sandbox)
+    - Veracode DAST Re-scan
 
 Compile Application:
     image: maven:3.6.0-jdk-8
@@ -98,6 +99,7 @@ Upload and Scan SAST, SCA (Policy or Sandbox):
 
 Veracode DAST Re-scan:
     image: veracode/api-signing
+    stage: Veracode DAST Re-scan
     before_script:
         - export VERACODE_API_KEY_ID=${VERACODE_API_ID}
           export VERACODE_API_KEY_SECRET=${VERACODE_API_KEY}
