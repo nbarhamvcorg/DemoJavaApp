@@ -3,7 +3,6 @@ stages:
     - Pipeline Scan
     - Agent-based SCA
     - Upload and Scan SAST, SCA (Policy or Sandbox)
-    - Veracode DAST Re-scan
 
 Compile Application:
     image: maven:3.6.0-jdk-8
@@ -90,15 +89,6 @@ Upload and Scan SAST, SCA (Policy or Sandbox):
         when: always
         name: "veracode-POLICY-SCAN-$CI_COMMIT_REF_NAME-$CI_COMMIT_SHORT_SHA"
     allow_failure: true
-
-Veracode DAST Re-scan:
-    image: veracode/api-signing
-    stage: Veracode DAST Re-scan
-    before_script:
-        - export VERACODE_API_KEY_ID=${VERACODE_API_ID}
-          export VERACODE_API_KEY_SECRET=${VERACODE_API_KEY}
-    script:
-        - http --auth-type veracode_hmac PUT https://api.veracode.com/was/configservice/v1/analyses/3cb4a1c5918ae2a7bf3d10c8fc455c4a?method=PATCH < da_scan_update.json
 
 # Sandbox Scan SAST, SCA:
 #     image: veracode/api-wrapper-java
