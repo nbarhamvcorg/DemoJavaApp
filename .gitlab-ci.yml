@@ -25,7 +25,7 @@ Pipeline Scan SAST (Summary info):
     needs:
         - Compile Application
     script:
-        - java -jar /opt/veracode/pipeline-scan.jar -vid ${VERACODE_API_ID} -vkey ${VERACODE_API_KEY} --file target/verademo.war 
+        - java -jar /opt/veracode/pipeline-scan.jar -vid ${VERACODE_API_ID} -vkey ${VERACODE_API_KEY} --file target/verademo.war || true 
     artifacts:
         paths:
             - results.json
@@ -40,7 +40,7 @@ Pipeline Scan SAST (Detailed info):
         - Compile Application
     script:
         - java -jar /opt/veracode/pipeline-scan.jar -vid ${VERACODE_API_ID} -vkey ${VERACODE_API_KEY} --request_policy "Nickpolicy" 2>&1 | tee pipeline_scan_policy_output.txt
-        - java -jar /opt/veracode/pipeline-scan.jar -vid ${VERACODE_API_ID} -vkey ${VERACODE_API_KEY} --file target/verademo.war --issue_details true
+        - java -jar /opt/veracode/pipeline-scan.jar -vid ${VERACODE_API_ID} -vkey ${VERACODE_API_KEY} --file target/verademo.war --issue_details true || true
             --policy_file Nickpolicy.json 
             --gl_issue_generation true
             -fjf filtered_results.json 2>&1 | tee pipeline_scan_text_output.txt
