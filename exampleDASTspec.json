@@ -1,0 +1,20 @@
+{
+  "name": "AutomationExampleURLPostman",
+  "scans": [
+    {
+      "scan_config_request": {
+        "target_url": {
+          "url": "http://verademo.nbarham.vuln.sa.veracode.io/verademo"
+        }
+      }
+    }
+  ],
+  "schedule": {
+    "duration": {
+      "length": 7,
+      "unit": "DAY"
+    },
+    "scheduled": true,
+    "now": true
+  }
+}   
