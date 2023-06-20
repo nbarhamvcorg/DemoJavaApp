@@ -45,15 +45,13 @@ Pipeline Scan SAST (Detailed info):
             --gl_issue_generation true
             --gl_vulnerability_generation true
             -fjf filtered_results.json 2>&1 | tee pipeline_scan_text_output.txt
-    
     artifacts:
+        reports:   
+            sast: veracode_gitlab_vulnerabilities.json  
         paths:
             - results.json
             - filtered_results.json
             - pipeline_scan_text_output.txt
-        reports:   
-            sast: veracode_gitlab_vulnerabilities.json  
-
         when: always
         name: "veracode-pipeline-$CI_COMMIT_REF_NAME-$CI_COMMIT_SHORT_SHA"
     allow_failure: true
