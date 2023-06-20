@@ -97,8 +97,8 @@ Upload and Scan SAST, SCA (Policy or Sandbox):
 package_sbom:
     image: python:latest
     stage: SBOM generation
-    only:
-        - release
+    needs:
+        - Upload and Scan SAST, SCA (Policy or Sandbox)
     before_script:
       - pip install httpie
       - pip install veracode_api_signing
