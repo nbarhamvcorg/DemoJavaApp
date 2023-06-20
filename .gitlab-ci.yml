@@ -94,7 +94,7 @@ Upload and Scan SAST, SCA (Policy or Sandbox):
         name: "veracode-POLICY-SCAN-$CI_COMMIT_REF_NAME-$CI_COMMIT_SHORT_SHA"
     allow_failure: true
 
-package_sbom:
+SBOM generation from Policy Scan:
     image: python:latest
     stage: SBOM generation
     needs:
