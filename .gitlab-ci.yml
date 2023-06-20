@@ -3,6 +3,7 @@ stages:
     - Pipeline Scan
     - Agent-based SCA
     - Upload and Scan SAST, SCA (Policy or Sandbox)
+    - SBOM generation
 
 Compile Application:
     image: maven:3.6.0-jdk-8
@@ -92,6 +93,33 @@ Upload and Scan SAST, SCA (Policy or Sandbox):
         when: always
         name: "veracode-POLICY-SCAN-$CI_COMMIT_REF_NAME-$CI_COMMIT_SHORT_SHA"
     allow_failure: true
+
+package_sbom:
+    image: python:latest
+    stage: SBOM generation
+    only:
+        - release
+    before_script:
+      - pip install httpie
+      - pip install veracode_api_signing
+      - apt update
+      - apt install -y jq
+      - mkdir -p ~/.veracode/
+      - |
+        cat > ~/.veracode/credentials << EOF
+        [default]
+        veracode_api_key_id = ${VERACODE_API_ID}
+        veracode_api_key_secret = ${VERACODE_API_KEY}
+        EOF
+    script:
+      - GUID=$(http --auth-type=veracode_hmac GET https://api.veracode.com/appsec/v1/applications?name=verademo-gitlab | jq -r '._embedded.applications[0].guid')
+      - echo $GUID
+      - http --auth-type=veracode_hmac GET https://api.veracode.com/srcclr/sbom/v1/targets/$GUID/cyclonedx?type=application > verademo-gitlab_sbom.json
+    artifacts:
+      paths:
+        - verademo-gitlab_sbom.json
+      expire_in: 1 week
+
 
 # Sandbox Scan SAST, SCA:
 #     image: veracode/api-wrapper-java
