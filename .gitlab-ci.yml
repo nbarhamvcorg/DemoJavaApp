@@ -1,6 +1,7 @@
 stages:
     - Build app
-    - Pipeline Scan MR
+    - Pipeline Scan MR1
+    - Pipeline Scan MR2
     - Pipeline Scan
     - Agent-based SCA
     - Upload and Scan SAST, SCA (Policy or Sandbox)
@@ -23,13 +24,13 @@ Compile Application:
 
 Pipeline Scan SAST (Summary info):
     image: veracode/pipeline-scan:latest
-    stage: Pipeline Scan MR
+    stage: Pipeline Scan MR1
     rules:
-    - if: $CI_PIPELINE_SOURCE == 'merge_request_event'
+        - if: $CI_PIPELINE_SOURCE == 'merge_request_event'
     needs:
         - Compile Application
     script:
-      - java -jar pipeline-scan.jar -vid ${VERACODE_API_ID} -vkey ${VERACODE_API_KEY} --file target/verademo.war -so true -sf summary_report.txt
+        - java -jar pipeline-scan.jar -vid ${VERACODE_API_ID} -vkey ${VERACODE_API_KEY} --file target/verademo.war -so true -sf summary_report.txt
     artifacts:
       when: always
       paths:
@@ -39,11 +40,13 @@ Pipeline Scan SAST (Summary info):
 
 comment_on_merge:
     image: wasptree/veracode-glmc
-    stage: Pipeline Scan MR
+    stage: Pipeline Scan MR2
     rules:
-    - if: $CI_PIPELINE_SOURCE == 'merge_request_event'
+        - if: $CI_PIPELINE_SOURCE == 'merge_request_event'
+    needs: 
+        - Pipeline Scan MR1
     script:
-     - python3 /opt/veracode/veracode-glmc.py --filename summary_report.txt
+        - python3 /opt/veracode/veracode-glmc.py --filename summary_report.txt
     allow_failure: true
 
 Pipeline Scan SAST (Detailed info):
