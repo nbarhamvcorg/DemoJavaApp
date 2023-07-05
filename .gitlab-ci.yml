@@ -1,15 +1,18 @@
 stages:
-    - Build app
+    - Build app for MR
     - Pipeline Scan for MR
     - MR Decoration
+    - Build app
     - Pipeline Scan (Detailed info)
     - Agent-based SCA
     - Upload and Scan SAST, SCA (Policy or Sandbox)
     - SBOM generation
 
-Compile Application:
-    stage: Build app
+Compile Application for MR:
+    stage: Build app for MR
     image: maven:3.6.0-jdk-8
+    rules:
+        - if: $CI_PIPELINE_SOURCE == 'merge_request_event'
     script:
       - mvn clean package
     artifacts:
@@ -46,6 +49,23 @@ comment_on_merge:
     script:
         - python3 /opt/veracode/veracode-glmc.py --filename summary_report.txt
     allow_failure: true
+
+Compile Application:
+    stage: Build app
+    image: maven:3.6.0-jdk-8
+    rules:
+        - if: $CI_PIPELINE_SOURCE == 'merge_request_event'
+    script:
+      - mvn clean package
+    artifacts:
+      name: verademo-gitlab
+      paths:
+        - target/
+      expire_in: 5 week
+    cache:
+      paths:
+        - target/
+        - .m2/repository
 
 Pipeline Scan SAST (Detailed info):
     image: veracode/pipeline-scan:latest
