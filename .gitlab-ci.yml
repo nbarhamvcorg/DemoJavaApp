@@ -26,7 +26,7 @@ Pipeline Scan SAST (Summary info):
     rules:
         - if: $CI_PIPELINE_SOURCE == 'merge_request_event'
     needs:
-        - Compile Application
+        - 'Compile Application'
     script:
         - java -jar pipeline-scan.jar -vid ${VERACODE_API_ID} -vkey ${VERACODE_API_KEY} --file target/verademo.war -so true -sf summary_report.txt
     artifacts:
@@ -42,7 +42,7 @@ comment_on_merge:
     rules:
         - if: $CI_PIPELINE_SOURCE == 'merge_request_event'
     needs:
-        - Pipeline Scan SAST (Summary info)
+        - 'Pipeline Scan SAST (Summary info)'
     script:
         - python3 /opt/veracode/veracode-glmc.py --filename summary_report.txt
     allow_failure: true
@@ -51,7 +51,7 @@ Pipeline Scan SAST (Detailed info):
     image: veracode/pipeline-scan:latest
     stage: Pipeline Scan
     needs:
-        - Compile Application
+        - 'Compile Application'
     script:
         - java -jar /opt/veracode/pipeline-scan.jar -vid ${VERACODE_API_ID} -vkey ${VERACODE_API_KEY} --request_policy "Nickpolicy" 2>&1 | tee pipeline_scan_policy_output.txt
         - java -jar /opt/veracode/pipeline-scan.jar -vid ${VERACODE_API_ID} -vkey ${VERACODE_API_KEY} --file target/verademo.war --issue_details true || true
