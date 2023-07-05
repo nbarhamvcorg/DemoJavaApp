@@ -8,11 +8,9 @@ stages:
     - Pipeline Scan for MR
     - MR Decoration
 
-Compile Application:
+Build app:
     stage: Build app
     image: maven:3.6.0-jdk-8
-    rules:
-        - if: $CI_PIPELINE_SOURCE == 'merge_request_event'
     script:
       - mvn clean package
     artifacts:
@@ -27,9 +25,7 @@ Compile Application:
 
 Pipeline Scan SAST (Detailed info):
     image: veracode/pipeline-scan:latest
-    stage: Pipeline Scan (Detailed info)
-    needs:
-        - 'Compile Application'
+    stage: Pipeline Scan SAST (Detailed info)
     script:
         - java -jar /opt/veracode/pipeline-scan.jar -vid ${VERACODE_API_ID} -vkey ${VERACODE_API_KEY} --request_policy "Nickpolicy" 2>&1 | tee pipeline_scan_policy_output.txt
         - java -jar /opt/veracode/pipeline-scan.jar -vid ${VERACODE_API_ID} -vkey ${VERACODE_API_KEY} --file target/verademo.war --issue_details true || true
@@ -48,9 +44,9 @@ Pipeline Scan SAST (Detailed info):
         name: "veracode-pipeline-$CI_COMMIT_REF_NAME-$CI_COMMIT_SHORT_SHA"
     allow_failure: true
 
-Agent-based SCA Summary:
+Agent-based SCA (Summary info):
     image: maven:3.6.0-jdk-8
-    stage: Agent-based SCA
+    stage: Agent-based SCA (Summary info)
     script:
         - curl -sSL https://download.sourceclear.com/ci.sh | bash -s scan . --allow-dirty --update-advisor
     after_script:
@@ -65,7 +61,7 @@ Agent-based SCA Summary:
         name: "veracode-SCA-$CI_COMMIT_REF_NAME-$CI_COMMIT_SHORT_SHA"
     allow_failure: true
 
-Agent-based SCA Detailed:
+Agent-based SCA (Detailed info):
     image: maven:3.6.0-jdk-8
     stage: Agent-based SCA
     script:
