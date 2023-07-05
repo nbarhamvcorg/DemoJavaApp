@@ -28,7 +28,7 @@ Pipeline Scan SAST (Summary info):
     rules:
         - if: $CI_PIPELINE_SOURCE == 'merge_request_event'
     script:
-        - java -jar pipeline-scan.jar -vid ${VERACODE_API_ID} -vkey ${VERACODE_API_KEY} --file target/verademo.war -so true -sf summary_report.txt
+        - java -jar /opt/veracode/pipeline-scan.jar -vid ${VERACODE_API_ID} -vkey ${VERACODE_API_KEY} --file target/verademo.war -so true -sf summary_report.txt
     artifacts:
       when: always
       paths:
