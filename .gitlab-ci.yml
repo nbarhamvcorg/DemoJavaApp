@@ -1,7 +1,8 @@
 stages:
     - Build app
-    - Pipeline Scan (Detailed info)
-    - Agent-based SCA
+    - Pipeline Scan SAST (Detailed info)
+    - Agent-based SCA (Summary info)
+    - Agent-based SCA (Detailed info)
     - Upload and Scan SAST, SCA (Policy or Sandbox)
     - SBOM generation
     - Build app for MR
@@ -63,7 +64,7 @@ Agent-based SCA (Summary info):
 
 Agent-based SCA (Detailed info):
     image: maven:3.6.0-jdk-8
-    stage: Agent-based SCA
+    stage: Agent-based SCA (Detailed info)
     script:
         - curl -sSL https://download.sourceclear.com/ci.sh | bash -s scan . --json scaResults.json --allow-dirty --update-advisor --scan-collectors maven 2>&1 | tee sca_output.txt
     allow_failure: true
@@ -72,7 +73,7 @@ Upload and Scan SAST, SCA (Policy or Sandbox):
     image: veracode/api-wrapper-java
     stage: Upload and Scan SAST, SCA (Policy or Sandbox)
     needs:
-        - Compile Application
+        - Build app
     script:
         - java -jar /opt/veracode/api-wrapper.jar 
             -vid ${VERACODE_API_ID} 
