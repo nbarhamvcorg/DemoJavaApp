@@ -12,7 +12,7 @@ stages:
 
 Build app:
     rules:
-    - when: manual
+    - when: never
     stage: Build app
     image: maven:3.6.0-jdk-8
     script:
@@ -29,7 +29,7 @@ Build app:
 
 Pipeline Scan SAST (Detailed info):
     rules:
-    - when: manual
+    - when: never
     image: veracode/pipeline-scan:latest
     stage: Pipeline Scan SAST (Detailed info)
     script:
@@ -52,7 +52,7 @@ Pipeline Scan SAST (Detailed info):
 
 Agent-based SCA (Summary info):
     rules:
-    - when: manual
+    - when: never
     image: maven:3.6.0-jdk-8
     stage: Agent-based SCA (Summary info)
     script:
@@ -71,7 +71,7 @@ Agent-based SCA (Summary info):
 
 Agent-based SCA (Detailed info):
     rules:
-    - when: manual
+    - when: never
     image: maven:3.6.0-jdk-8
     stage: Agent-based SCA (Detailed info)
     script:
@@ -80,7 +80,7 @@ Agent-based SCA (Detailed info):
 
 Upload and Scan SAST, SCA (Policy or Sandbox):
     rules:
-    - when: manual
+    - when: never
     image: veracode/api-wrapper-java
     stage: Upload and Scan SAST, SCA (Policy or Sandbox)
     needs:
@@ -105,7 +105,7 @@ Upload and Scan SAST, SCA (Policy or Sandbox):
 
 SBOM generation from Policy Scan:
     rules:
-    - when: manual
+    - when: never
     image: python:latest
     stage: SBOM generation
     needs:
