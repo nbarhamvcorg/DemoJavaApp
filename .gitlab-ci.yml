@@ -9,7 +9,10 @@ stages:
     - Pipeline Scan for MR
     - MR Decoration
 
+
 Build app:
+    rules:
+    - when: manual
     stage: Build app
     image: maven:3.6.0-jdk-8
     script:
@@ -25,6 +28,8 @@ Build app:
         - .m2/repository
 
 Pipeline Scan SAST (Detailed info):
+    rules:
+    - when: manual
     image: veracode/pipeline-scan:latest
     stage: Pipeline Scan SAST (Detailed info)
     script:
@@ -46,6 +51,8 @@ Pipeline Scan SAST (Detailed info):
     allow_failure: true
 
 Agent-based SCA (Summary info):
+    rules:
+    - when: manual
     image: maven:3.6.0-jdk-8
     stage: Agent-based SCA (Summary info)
     script:
@@ -63,6 +70,8 @@ Agent-based SCA (Summary info):
     allow_failure: true
 
 Agent-based SCA (Detailed info):
+    rules:
+    - when: manual
     image: maven:3.6.0-jdk-8
     stage: Agent-based SCA (Detailed info)
     script:
@@ -70,6 +79,8 @@ Agent-based SCA (Detailed info):
     allow_failure: true
 
 Upload and Scan SAST, SCA (Policy or Sandbox):
+    rules:
+    - when: manual
     image: veracode/api-wrapper-java
     stage: Upload and Scan SAST, SCA (Policy or Sandbox)
     needs:
@@ -93,6 +104,8 @@ Upload and Scan SAST, SCA (Policy or Sandbox):
     allow_failure: true
 
 SBOM generation from Policy Scan:
+    rules:
+    - when: manual
     image: python:latest
     stage: SBOM generation
     needs:
