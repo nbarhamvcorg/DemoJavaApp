@@ -91,7 +91,7 @@ Upload and Scan SAST, SCA (Policy or Sandbox):
         - policy_scan_output.txt
         when: always
         name: "veracode-POLICY-SCAN-$CI_COMMIT_REF_NAME-$CI_COMMIT_SHORT_SHA"
-    allow_failure: true
+    allow_failure: false
 
 SBOM generation from Policy Scan:
     image: python:latest
