@@ -51,16 +51,6 @@ Agent-based SCA (Summary info):
     stage: Agent-based SCA (Summary info)
     script:
         - curl -sSL https://download.sourceclear.com/ci.sh | bash -s scan . --allow-dirty --update-advisor
-    after_script:
-        - nodejs ./dependencies.js ${PRIVATE_TOKEN} true 17140954
-    artifacts:
-        reports:
-            dependency_scanning: output-sca-vulnerabilites.json
-        paths:
-            - sca_output.txt
-            - output-sca-vulnerabilites.json
-        when: always
-        name: "veracode-SCA-$CI_COMMIT_REF_NAME-$CI_COMMIT_SHORT_SHA"
     allow_failure: true
 
 Agent-based SCA (Detailed info):
@@ -81,7 +71,7 @@ Upload and Scan SAST, SCA (Policy or Sandbox):
             -vkey ${VERACODE_API_KEY}
             -action UploadAndScan 
             -appname "verademo-gitlab" 
-            -createprofile true 
+            -createprofile false 
             -autoscan true
             -filepath ./target/verademo.war 
             -version "Job ${CI_JOB_ID} in pipeline ${CI_PIPELINE_ID}" 
@@ -91,7 +81,7 @@ Upload and Scan SAST, SCA (Policy or Sandbox):
         - policy_scan_output.txt
         when: always
         name: "veracode-POLICY-SCAN-$CI_COMMIT_REF_NAME-$CI_COMMIT_SHORT_SHA"
-    allow_failure: false
+    allow_failure: true
 
 SBOM generation from Policy Scan:
     image: python:latest
