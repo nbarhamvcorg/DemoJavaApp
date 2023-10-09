@@ -1,56 +1,56 @@
 stages:
-    - Build app
-    - Pipeline Scan SAST (Detailed info)
+    # - Build app
+    # - Pipeline Scan SAST (Detailed info)
     - Agent-based SCA (Summary info)
     - Agent-based SCA (Detailed info)
-    - Upload and Scan SAST, SCA (Policy or Sandbox)
-    - SBOM generation
-    - Build app for MR
-    - Pipeline Scan for MR
-    - MR Decoration
+    # - Upload and Scan SAST, SCA (Policy or Sandbox)
+    # - SBOM generation
+    # - Build app for MR
+    # - Pipeline Scan for MR
+    # - MR Decoration
 
 
-Build app:
-    stage: Build app
-    image: maven:3.6.0-jdk-8
-    script:
-      - mvn clean package
-    artifacts:
-      name: verademo-gitlab
-      paths:
-        - target/
-      expire_in: 5 week
-    cache:
-      paths:
-        - target/
-        - .m2/repository
+# Build app:
+#     stage: Build app
+#     image: maven:3.6.0-jdk-8
+#     script:
+#       - mvn clean package
+#     artifacts:
+#       name: verademo-gitlab
+#       paths:
+#         - target/
+#       expire_in: 5 week
+#     cache:
+#       paths:
+#         - target/
+#         - .m2/repository
 
-Pipeline Scan SAST (Detailed info):
-    image: veracode/pipeline-scan:latest
-    stage: Pipeline Scan SAST (Detailed info)
-    script:
-        - java -jar /opt/veracode/pipeline-scan.jar -vid ${VERACODE_API_ID} -vkey ${VERACODE_API_KEY} --request_policy "Nickpolicy" 2>&1 | tee pipeline_scan_policy_output.txt
-        - java -jar /opt/veracode/pipeline-scan.jar -vid ${VERACODE_API_ID} -vkey ${VERACODE_API_KEY} --file target/verademo.war --issue_details true || true
-            --policy_file Nickpolicy.json 
-            --gl_issue_generation true
-            --gl_vulnerability_generation true
-            -fjf filtered_results.json 2>&1 | tee pipeline_scan_text_output.txt
-    artifacts:
-        reports:   
-            sast: veracode_gitlab_vulnerabilities.json  
-        paths:
-            - results.json
-            - filtered_results.json
-            - pipeline_scan_text_output.txt
-        when: always
-        name: "veracode-pipeline-$CI_COMMIT_REF_NAME-$CI_COMMIT_SHORT_SHA"
-    allow_failure: true
+# Pipeline Scan SAST (Detailed info):
+#     image: veracode/pipeline-scan:latest
+#     stage: Pipeline Scan SAST (Detailed info)
+#     script:
+#         - java -jar /opt/veracode/pipeline-scan.jar -vid ${VERACODE_API_ID} -vkey ${VERACODE_API_KEY} --request_policy "Nickpolicy" 2>&1 | tee pipeline_scan_policy_output.txt
+#         - java -jar /opt/veracode/pipeline-scan.jar -vid ${VERACODE_API_ID} -vkey ${VERACODE_API_KEY} --file target/verademo.war --issue_details true || true
+#             --policy_file Nickpolicy.json 
+#             --gl_issue_generation true
+#             --gl_vulnerability_generation true
+#             -fjf filtered_results.json 2>&1 | tee pipeline_scan_text_output.txt
+#     artifacts:
+#         reports:   
+#             sast: veracode_gitlab_vulnerabilities.json  
+#         paths:
+#             - results.json
+#             - filtered_results.json
+#             - pipeline_scan_text_output.txt
+#         when: always
+#         name: "veracode-pipeline-$CI_COMMIT_REF_NAME-$CI_COMMIT_SHORT_SHA"
+#     allow_failure: true
 
 Agent-based SCA (Summary info):
     image: maven:3.6.0-jdk-8
     stage: Agent-based SCA (Summary info)
     script:
-        - curl -sSL https://download.sourceclear.com/ci.sh | bash -s scan . --allow-dirty --update-advisor
+        - curl -sSL https://download.sourceclear.com/ci.sh | bash -s scan . --json scaResults.json --allow-dirty --update-advisor
     allow_failure: true
 
 Agent-based SCA (Detailed info):
@@ -60,94 +60,94 @@ Agent-based SCA (Detailed info):
         - curl -sSL https://download.sourceclear.com/ci.sh | bash -s scan . --json scaResults.json --allow-dirty --update-advisor --scan-collectors maven 2>&1 | tee sca_output.txt
     allow_failure: true
 
-Upload and Scan SAST, SCA (Policy or Sandbox):
-    image: veracode/api-wrapper-java
-    stage: Upload and Scan SAST, SCA (Policy or Sandbox)
-    needs:
-        - Build app
-    script:
-        - java -jar /opt/veracode/api-wrapper.jar 
-            -vid ${VERACODE_API_ID} 
-            -vkey ${VERACODE_API_KEY}
-            -action UploadAndScan 
-            -appname "verademo-gitlab" 
-            -createprofile false 
-            -autoscan true
-            -filepath ./target/verademo.war 
-            -version "Job ${CI_JOB_ID} in pipeline ${CI_PIPELINE_ID}" 
-            -scantimeout 15 2>&1 | tee policy_scan_output.txt
-    artifacts:
-        paths:
-        - policy_scan_output.txt
-        when: always
-        name: "veracode-POLICY-SCAN-$CI_COMMIT_REF_NAME-$CI_COMMIT_SHORT_SHA"
-    allow_failure: true
+# Upload and Scan SAST, SCA (Policy or Sandbox):
+#     image: veracode/api-wrapper-java
+#     stage: Upload and Scan SAST, SCA (Policy or Sandbox)
+#     needs:
+#         - Build app
+#     script:
+#         - java -jar /opt/veracode/api-wrapper.jar 
+#             -vid ${VERACODE_API_ID} 
+#             -vkey ${VERACODE_API_KEY}
+#             -action UploadAndScan 
+#             -appname "verademo-gitlab" 
+#             -createprofile false 
+#             -autoscan true
+#             -filepath ./target/verademo.war 
+#             -version "Job ${CI_JOB_ID} in pipeline ${CI_PIPELINE_ID}" 
+#             -scantimeout 15 2>&1 | tee policy_scan_output.txt
+#     artifacts:
+#         paths:
+#         - policy_scan_output.txt
+#         when: always
+#         name: "veracode-POLICY-SCAN-$CI_COMMIT_REF_NAME-$CI_COMMIT_SHORT_SHA"
+#     allow_failure: true
 
-SBOM generation from Policy Scan:
-    image: python:latest
-    stage: SBOM generation
-    needs:
-        - Upload and Scan SAST, SCA (Policy or Sandbox)
-    before_script:
-      - pip install httpie
-      - pip install veracode_api_signing
-      - apt update
-      - apt install -y jq
-      - mkdir -p ~/.veracode/
-      - |
-        cat > ~/.veracode/credentials << EOF
-        [default]
-        veracode_api_key_id = ${VERACODE_API_ID}
-        veracode_api_key_secret = ${VERACODE_API_KEY}
-        EOF
-    script:
-      - GUID=$(http --auth-type=veracode_hmac GET https://api.veracode.com/appsec/v1/applications?name=verademo-gitlab | jq -r '._embedded.applications[0].guid')
-      - echo $GUID
-      - http --auth-type=veracode_hmac GET https://api.veracode.com/srcclr/sbom/v1/targets/$GUID/cyclonedx?type=application > verademo-gitlab_sbom.json
-    artifacts:
-      paths:
-        - verademo-gitlab_sbom.json
-      expire_in: 1 week
+# SBOM generation from Policy Scan:
+#     image: python:latest
+#     stage: SBOM generation
+#     needs:
+#         - Upload and Scan SAST, SCA (Policy or Sandbox)
+#     before_script:
+#       - pip install httpie
+#       - pip install veracode_api_signing
+#       - apt update
+#       - apt install -y jq
+#       - mkdir -p ~/.veracode/
+#       - |
+#         cat > ~/.veracode/credentials << EOF
+#         [default]
+#         veracode_api_key_id = ${VERACODE_API_ID}
+#         veracode_api_key_secret = ${VERACODE_API_KEY}
+#         EOF
+#     script:
+#       - GUID=$(http --auth-type=veracode_hmac GET https://api.veracode.com/appsec/v1/applications?name=verademo-gitlab | jq -r '._embedded.applications[0].guid')
+#       - echo $GUID
+#       - http --auth-type=veracode_hmac GET https://api.veracode.com/srcclr/sbom/v1/targets/$GUID/cyclonedx?type=application > verademo-gitlab_sbom.json
+#     artifacts:
+#       paths:
+#         - verademo-gitlab_sbom.json
+#       expire_in: 1 week
 
-Build app for MR:
-    stage: Build app for MR
-    image: maven:3.6.0-jdk-8
-    rules:
-        - if: $CI_PIPELINE_SOURCE == 'merge_request_event'
-    script:
-      - mvn clean package
-    artifacts:
-      name: verademo-gitlab
-      paths:
-        - target/
-      expire_in: 5 week
-    cache:
-      paths:
-        - target/
-        - .m2/repository
+# Build app for MR:
+#     stage: Build app for MR
+#     image: maven:3.6.0-jdk-8
+#     rules:
+#         - if: $CI_PIPELINE_SOURCE == 'merge_request_event'
+#     script:
+#       - mvn clean package
+#     artifacts:
+#       name: verademo-gitlab
+#       paths:
+#         - target/
+#       expire_in: 5 week
+#     cache:
+#       paths:
+#         - target/
+#         - .m2/repository
 
-Pipeline Scan for MR:
-    image: veracode/pipeline-scan:latest
-    stage: Pipeline Scan for MR
-    rules:
-        - if: $CI_PIPELINE_SOURCE == 'merge_request_event'
-    script:
-        - java -jar /opt/veracode/pipeline-scan.jar -vid ${VERACODE_API_ID} -vkey ${VERACODE_API_KEY} --file target/verademo.war -so true -sf summary_report.txt
-    artifacts:
-      when: always
-      paths:
-        - summary_report.txt
-      expire_in: 1 day
-    allow_failure: true
+# Pipeline Scan for MR:
+#     image: veracode/pipeline-scan:latest
+#     stage: Pipeline Scan for MR
+#     rules:
+#         - if: $CI_PIPELINE_SOURCE == 'merge_request_event'
+#     script:
+#         - java -jar /opt/veracode/pipeline-scan.jar -vid ${VERACODE_API_ID} -vkey ${VERACODE_API_KEY} --file target/verademo.war -so true -sf summary_report.txt
+#     artifacts:
+#       when: always
+#       paths:
+#         - summary_report.txt
+#       expire_in: 1 day
+#     allow_failure: true
 
-MR Decoration:
-    image: wasptree/veracode-glmc
-    stage: MR Decoration
-    rules:
-        - if: $CI_PIPELINE_SOURCE == 'merge_request_event'
-    script:
-        - python3 /opt/veracode/veracode-glmc.py --filename summary_report.txt
-    allow_failure: true
+# MR Decoration:
+#     image: wasptree/veracode-glmc
+#     stage: MR Decoration
+#     rules:
+#         - if: $CI_PIPELINE_SOURCE == 'merge_request_event'
+#     script:
+#         - python3 /opt/veracode/veracode-glmc.py --filename summary_report.txt
+#     allow_failure: true
 
 # Sandbox Scan SAST, SCA:
 #     image: veracode/api-wrapper-java
