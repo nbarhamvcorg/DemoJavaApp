@@ -51,7 +51,6 @@ Agent-based SCA (Summary info):
     stage: Agent-based SCA (Summary info)
     script:
         - curl -sSL https://download.sourceclear.com/ci.sh | bash -s scan . --allow-dirty --update-advisor
-    allow_failure: true
 
 Agent-based SCA (Detailed info):
     image: maven:3.6.0-jdk-8
